@@ -37,6 +37,59 @@ A comprehensive activity logging system tracks all user actions (CRUD operations
 ### Invoicing & Billing Module
 A comprehensive invoicing system with auto-generated invoice numbers (INV/2025/0001 format), multi-payment tracking (UPI, Cash, Card, Net Banking, Cheque), and approval workflows. **Features**: Invoice generation from service visits, discount/coupon application, tax calculation, admin approval/rejection, payment recording with transaction history, automatic warranty creation on approval, and notification stubs for WhatsApp/Email delivery. **PDF Generation**: Automatic professional PDF generation upon invoice approval, including customer details, vehicle information, itemized charges, tax breakdown, and payment details. PDFs are stored and accessible via download endpoint, with on-demand regeneration for legacy invoices. **Role-Based Access**: Admin has full control (create, approve, reject, manage coupons), Sales Executive can create invoices and record payments. **Razorpay Integration**: Stub implementation included for future payment gateway integration.
 
+### API Logging & Monitoring
+The application features a comprehensive dual-layer logging system for production debugging and monitoring:
+
+**Server-Side Logging**:
+- All API requests logged with method, path, status code, duration, and response data
+- Enhanced error handling with detailed stack traces and context (development mode)
+- Production error responses sanitized to prevent sensitive data exposure
+- Automatic activity logging for all CRUD operations via ActivityLog model
+
+**Browser Console Logging**:
+- API responses logged to browser console via custom X-API-Log headers
+- Color-coded by status (blue for requests, green for success, red for errors, purple for duration)
+- Includes full request/response metadata for debugging
+- Response payloads truncated to 500 chars and headers limited to 4KB to prevent size issues
+- Automatic logging for all fetch requests via TanStack Query integration
+
+**Error Handling**:
+- Centralized error handler utility for consistent logging
+- Production mode returns generic "An error occurred" messages
+- Development mode exposes full error details including stack traces
+- All errors logged server-side with user context and timestamps
+
+### Deployment Configuration
+The application is deployment-ready for both Replit and Vercel platforms:
+
+**Replit Deployment** (Recommended):
+- Uses built-in deployment tools with automatic build/run configuration
+- In-memory session storage (MemoryStore) for development
+- MongoDB connection via environment variable (MONGODB_URI)
+- Session management with secure HTTP-only cookies
+- Deployment config: `npm run build` → `npm run start`
+
+**Vercel Deployment** (Serverless):
+- Serverless architecture with Express functions
+- PostgreSQL-backed session storage (connect-pg-simple) required for session persistence
+- MongoDB connection caching for optimal serverless performance
+- CORS headers configured for safe cross-origin requests
+- API routes handled via `/api/index.ts` serverless function
+- Static files served from `/dist/client` directory
+
+**Environment Variables**:
+- `MONGODB_URI`: MongoDB connection string (required)
+- `SESSION_SECRET`: Secure session encryption key (required)
+- `DATABASE_URL`: PostgreSQL connection string (Vercel only)
+- `NODE_ENV`: Environment mode (development/production)
+- `PORT`: Server port (default: 5000)
+
+**Security Features**:
+- Production error responses sanitized
+- Session secrets environment-based
+- MongoDB credentials secured via environment variables
+- CORS properly configured for each deployment platform
+
 ## External Dependencies
 
 -   **Database**: MongoDB (via Mongoose)
