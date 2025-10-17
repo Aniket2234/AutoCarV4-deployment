@@ -14,7 +14,33 @@ export const queryClient = new QueryClient({
   },
 });
 
-async function throwIfResNotOk(res: Response) {
+function logAPIResponse(res: Response) {
+  const apiLog = res.headers.get('X-API-Log');
+  if (apiLog) {
+    try {
+      const logData = JSON.parse(apiLog);
+      const isError = logData.status >= 400;
+      const logMethod = isError ? 'error' : 'log';
+      
+      console[logMethod](
+        `%c[API ${logData.method}] %c${logData.path} %c${logData.status} %c${logData.duration}ms`,
+        'color: #3b82f6; font-weight: bold',
+        'color: #64748b',
+        `color: ${isError ? '#ef4444' : '#10b981'}; font-weight: bold`,
+        'color: #8b5cf6',
+        logData
+      );
+    } catch (e) {
+      console.error('Failed to parse API log header:', e);
+    }
+  }
+}
+
+async function throwIfResNotOk(res: Response, skipLogging = false) {
+  if (!skipLogging) {
+    logAPIResponse(res);
+  }
+  
   if (!res.ok) {
     const text = await res.text();
     let json: any;
@@ -61,11 +87,13 @@ export const getQueryFn: <T>(options: {
       credentials: "include",
     });
 
+    logAPIResponse(res);
+
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
     }
 
-    await throwIfResNotOk(res);
+    await throwIfResNotOk(res, true);
     return await res.json();
   };
 
